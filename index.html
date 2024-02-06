@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Consulta de Produtos</title>
+    <meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="./css/styles.css">
+	<script src="https://cdn.jsdelivr.net/npm/quagga/dist/quagga.min.js"></script>
+</head>
+
+<body>
+	<header>
+		<img src="./assets/logo.png" alt="Logo da Empresa" class="logo">
+		<h1>Consulta de Produtos</h1>
+	</header>
+    <a href="admin.html" class="back-button">Administrador</a>
+	<h2>Escanear Código de Barras</h2>
+	<div id="camera"></div>
+	<br>
+	<button id="scan-button">Escanear Código de Barras</button>
+	<br><br>
+	<div id="resultado">
+		<h3>Informações do Produto:</h3>
+		<p><strong>Nome:</strong> <span id="nome-produto"></span></p>
+		<p><strong>Preço:</strong> <span id="preco-produto"></span>
+		<p></p>
+	</div>
+	<p>
+		<script>
+			function escanearCodigoBarras() {
+			    Quagga.init({
+			        inputStream: {
+			            name: "Live",
+			            type: "LiveStream",
+			            target: document.querySelector('#camera'),
+			            constraints: {
+			                facingMode: "environment"
+			            }
+			        },
+			        decoder: {
+			            readers: ["ean_reader"] 
+			        }
+			    }, function (err) {
+			        if (err) {
+			            console.error("Erro ao inicializar o Quagga:", err);
+			            return;
+			        }
+			        console.log("Quagga inicializado com sucesso.");
+			        Quagga.start();
+			    });
+			
+			    Quagga.onDetected(function (result) {
+			        var code = result.codeResult.code;
+			        consultarProduto(code);
+			        Quagga.stop();
+			    });
+			}
+			
+			
+			function consultarProduto(codigo) {
+			    var xhr = new XMLHttpRequest();
+			    xhr.open("GET", "consultar_produto.php?codigo=" + codigo, true);
+			    xhr.onreadystatechange = function() {
+			        if (xhr.readyState === 4 && xhr.status === 200) {
+			            var resposta = JSON.parse(xhr.responseText);
+			            if (resposta.encontrado) {
+			                document.getElementById("nome-produto").textContent = resposta.nome;
+			                document.getElementById("preco-produto").textContent = resposta.preco;
+			            } else {
+			                document.getElementById("nome-produto").textContent = "Produto não encontrado";
+			                document.getElementById("preco-produto").textContent = "";
+			            }
+			        }
+			    };
+			    xhr.send();
+			}
+			
+			
+			document.getElementById("scan-button").addEventListener("click", escanearCodigoBarras);
+		</script>
+	<footer> &copy; 2024 Ricardo C. Reis. Todos os direitos reservados. </footer>
+</body>
+
+</html>
